@@ -14,7 +14,7 @@ username='admin';
 if not User.objects.filter(email=email).exists():
     User.objects.create_superuser(
         email=email,
-        password=password
+        username=username,
         password=password
     )
 "
