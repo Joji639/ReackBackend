@@ -42,5 +42,5 @@ class UpdateUserStatusSerializer(serializers.Serializer):
 
 class UpdateOrderStatusSerializer(serializers.Serializer):
     status = serializers.ChoiceField(
-        choices=["pending", "confirmed", "shipped", "delivered"]
+        choices=[ "shipped", "delivered"]
     )

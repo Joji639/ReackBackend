@@ -44,6 +44,10 @@ class LoginSerializer(serializers.Serializer):
         if user is None or not user.check_password(password):
             raise serializers.ValidationError("Invalid credentials")
 
+
+        if user.status == "blocked":
+            raise serializers.ValidationError("Your account is blocked by admin")
+
         refresh = RefreshToken.for_user(user)
 
         return {

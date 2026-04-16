@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,14 +23,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-+l!-f$p=sj3wb$_q86!@kqbv2#8r&j(+rl8d#kpf(9f&em$#yf'
+SECRET_KEY = config('SECRET_KEY',default='fallback-secret')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+DEBUG =config('DEBUG',default=False,cast=bool) 
 
 
+
+ALLOWED_HOSTS = [host for host in config('ALLOWED_HOSTS', default='').split(',') if host]
+
+JWT_SECRET_KEY = config('JWT_SECRET_KEY', default=SECRET_KEY)
 # Application definition
 
 INSTALLED_APPS = [
@@ -54,6 +58,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -89,11 +94,11 @@ WSGI_APPLICATION = 'Authentication.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'backend',        
-        'USER': 'postgres',      
-        'PASSWORD': '123',    
-        'HOST': 'localhost',          
-        'PORT': '5432',               
+        'NAME': config('DB_NAME'),       
+        'USER': config('DB_USER'),      
+        'PASSWORD': config('DB_PASSWORD'),    
+        'HOST': config('DB_HOST',default='localhost'),         
+        'PORT': config('DB_PORT',default='5432'),               
     }
 }
 # .env ,git ignore
@@ -132,19 +137,28 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",   # Vite dev server
-]
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:5173'
+).split(',')
+
 CORS_ALLOW_CREDENTIALS = True 
 
 AUTH_USER_MODEL = "User.UserModel"
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
+        'User.permissions.IsNotBlocked',
     ),
     
 }
@@ -155,6 +169,9 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True, 
     'AUTH_HEADER_TYPES': ('Bearer',),   
+
+
+    'SIGNING_KEY': JWT_SECRET_KEY,
 }
 
 MEDIA_URL = '/media/'
@@ -163,12 +180,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 
-EMAIL_HOST_USER = "crudproject77@gmail.com"
-EMAIL_HOST_PASSWORD = "ymkz qbql wxgf iuoi"
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
