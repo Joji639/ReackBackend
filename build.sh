@@ -6,10 +6,10 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 python manage.py migrate
 
-# 🔥 LOAD DATA (products + users)
-python manage.py loaddata data.json || true
+echo "🔥 Loading data..."
+python manage.py loaddata data.json
 
-# 🔥 CREATE ADMIN (only if not exists)
+echo "🔥 Creating admin..."
 python manage.py shell -c "
 from django.contrib.auth import get_user_model;
 User = get_user_model();
