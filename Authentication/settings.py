@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -91,16 +92,25 @@ WSGI_APPLICATION = 'Authentication.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),       
-        'USER': config('DB_USER'),      
-        'PASSWORD': config('DB_PASSWORD'),    
-        'HOST': config('DB_HOST',default='localhost'),         
-        'PORT': config('DB_PORT',default='5432'),               
+DATABASE_URL = config("DATABASE_URL", default=None)
+
+if DATABASE_URL:
+    # ✅ Production (Render)
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL)
     }
-}
+else:
+    # ✅ Local (your current setup)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME'),       
+            'USER': config('DB_USER'),      
+            'PASSWORD': config('DB_PASSWORD'),    
+            'HOST': config('DB_HOST', default='localhost'),         
+            'PORT': config('DB_PORT', default='5432'),               
+        }
+    }
 # .env ,git ignore
 
 # Password validation
