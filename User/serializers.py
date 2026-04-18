@@ -6,7 +6,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 
 
-# ================= SIGNUP =================
+
 class SignUpSerializer(serializers.ModelSerializer):
     confirmPassword = serializers.CharField(write_only=True)
 
@@ -30,7 +30,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             validated_data.pop("confirmPassword")
             password = validated_data.pop("password")
 
-            # ✅ Use create_user (best practice)
+            
             user = UserModel.objects.create_user(
                 password=password,
                 **validated_data
@@ -41,7 +41,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("User creation failed")
 
 
-# ================= LOGIN =================
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -61,7 +61,7 @@ class LoginSerializer(serializers.Serializer):
 
             refresh = RefreshToken.for_user(user)
 
-            # ✅ FIX: Proper admin detection
+            
             role = "admin" if user.is_superuser else user.role
 
             return {
@@ -78,7 +78,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Login failed")
 
 
-# ================= RESET PASSWORD =================
+
 class ResetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
     confirmPassword = serializers.CharField(write_only=True)
@@ -87,15 +87,15 @@ class ResetPasswordSerializer(serializers.Serializer):
 
     def validate(self, data):
         try:
-            # 🔹 Password match check
+            
             if data["password"] != data["confirmPassword"]:
                 raise serializers.ValidationError("Passwords do not match")
 
-            # 🔹 Decode user
+            
             uid = force_str(urlsafe_base64_decode(data["uid"]))
             user = UserModel.objects.get(id=uid)
 
-            # 🔹 Token check
+            
             if not PasswordResetTokenGenerator().check_token(user, data["token"]):
                 raise serializers.ValidationError("Invalid or expired token")
 
